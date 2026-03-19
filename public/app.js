@@ -755,6 +755,12 @@ function render() {
 }
 
 function loadSheetsFromExcel(file) {
+  // Safety Check: Ensure the user updated the API URL
+  if (API_BASE_URL.includes("YOUR_USERNAME") && !window.location.hostname.includes("localhost")) {
+    alert("CONFIGURATION ERROR: You need to open public/app.js and replace 'YOUR_USERNAME' with your actual Cloudflare name.");
+    return;
+  }
+
   const form = new FormData();
   form.append("file", file);
 
