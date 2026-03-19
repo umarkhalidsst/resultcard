@@ -1,5 +1,5 @@
 // Cloudflare Worker URL (The backend API)
-let API_BASE_URL = "https://attendance-frontend.umarkhalidsst.workers.dev";
+let API_BASE_URL = "https://attendance-app.umarkhalidsst.workers.dev";
 
 // Automatically use local server when running locally (npm start)
 if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
@@ -637,6 +637,13 @@ function buildStudentsTable() {
     const statusTd = document.createElement("td");
     const statusSelect = document.createElement("select");
     statusSelect.dataset.studentIndex = index;
+
+    // Initialize status if missing
+    if (typeof row._status === "undefined") {
+      row._status = "present";
+    }
+    statusSelect.value = row._status;
+
     ["Present", "Absent"].forEach((label) => {
       const opt = document.createElement("option");
       opt.value = label.toLowerCase();
@@ -653,6 +660,7 @@ function buildStudentsTable() {
     btn.className = "small";
     btn.textContent = "Send WhatsApp";
     btn.disabled = true;
+    btn.disabled = row._status !== "absent";
     btn.addEventListener("click", () => {
       const template = elements.messageTemplate.value || DEFAULT_TEMPLATE;
       const message = template
@@ -671,6 +679,9 @@ function buildStudentsTable() {
 
     statusSelect.addEventListener("change", () => {
       btn.disabled = statusSelect.value !== "absent";
+      row._status = statusSelect.value;
+      btn.disabled = row._status !== "absent";
+      saveSheets(); // Save status changes
     });
 
     actionTd.appendChild(btn);
@@ -811,6 +822,7 @@ function sendClassMessage() {
   const template = elements.messageTemplate.value || DEFAULT_TEMPLATE;
 
   const links = rows
+    .filter((row) => row._status === "absent") // Only include students marked as absent
     .map((row) => {
       const roll = row.Roll || row.roll || row["Roll #"] || row["roll #"] || "";
       const name =
@@ -860,6 +872,11 @@ function sendClassMessage() {
       return { name, phone, link: makeWhatsAppLink(phone, message) };
     })
     .filter(Boolean);
+
+  if (links.length === 0) {
+    alert("No students marked as 'Absent'. Please mark students as absent first.");
+    return;
+  }
 
   elements.links.innerHTML = "";
   links.forEach((entry) => {
