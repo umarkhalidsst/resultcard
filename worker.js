@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import * as XLSX from 'xlsx';
-import { serveStatic } from 'hono/cloudflare-workers'
 
 const app = new Hono();
 
@@ -21,6 +20,9 @@ function workbookToJson(workbook) {
   });
   return out;
 }
+
+// Root Route: Confirm API is working
+app.get('/', (c) => c.text("Attendance API is running. Please access the app via your Cloudflare Pages URL."));
 
 // 0. Principals Data Routes
 app.get('/api/principals', (c) => {
@@ -158,8 +160,5 @@ app.get('/api/google-sheet-worksheets', async (c) => {
     return c.json({ error: err.message }, 500);
   }
 });
-
-// Serve static assets from the root directory
-app.get('/*', serveStatic({ root: './public' }))
 
 export default app;
