@@ -102,26 +102,20 @@ app.post('/api/upload', async (c) => {
 // 2. Google Sheet Data Route
 app.get('/api/google-sheet', async (c) => {
   const sheetId = c.req.query('sheetId');
-  const sheetName = c.req.query('sheetName');
-  const gid = c.req.query('gid');
 
   if (!sheetId) return c.json({ error: "Missing sheetId" }, 400);
 
-  const params = [];
-  if (gid) params.push(`gid=${encodeURIComponent(gid)}`);
-  else if (sheetName) params.push(`sheet=${encodeURIComponent(sheetName)}`);
-
-  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv${params.length ? `&${params.join("&")}` : ""}`;
+  // Fetch the entire workbook as XLSX to get all sheets (Classes) at once
+  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/export?format=xlsx`;
 
   try {
     const resp = await fetch(url);
-    const text = await resp.text();
-
-    if (!resp.ok || text.trim().startsWith("<")) {
+    if (!resp.ok) {
       return c.json({ error: "Unable to fetch sheet. Make sure it is public." }, 400);
     }
 
-    const workbook = XLSX.read(text, { type: "string" });
+    const arrayBuffer = await resp.arrayBuffer();
+    const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: "array" });
     const data = workbookToJson(workbook);
     return c.json({ sheets: data });
   } catch (err) {

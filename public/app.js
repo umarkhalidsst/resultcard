@@ -1,6 +1,6 @@
 // Cloudflare Worker URL (The backend API)
 let API_BASE_URL = "";
-console.log("App Version: 1.9 - Cross Device Sync");
+console.log("App Version: 2.0 - Auto Approval & PWA");
 
 const state = {
   sheets: {},
@@ -537,7 +537,7 @@ function handlePrincipalSignup() {
   }
  elements.principalSignupSchool.value = "";
   const id = `p_${Date.now()}`;
-  state.principals.push({ id, name, phone, email, password, school, approved: false });
+  state.principals.push({ id, name, phone, email, password, school, approved: true, approvedAt: Date.now(), expiresDays: 365 });
   savePrincipals();
   savePrincipalsToAPI();
   elements.principalSignupName.value = "";
@@ -546,7 +546,7 @@ function handlePrincipalSignup() {
   elements.principalSignupPassword.value = "";
   elements.principalSignupSchool.value = "";
 
-  alert("Request submitted. Please wait for admin approval.");
+  alert("Principal registered successfully. You can now login.");
   renderPrincipalLoginOptions();
 }
 
@@ -765,6 +765,7 @@ function buildStudentsTable() {
     const phone = normalizePhone(rawPhone);
 
     const tr = document.createElement("tr");
+    tr.className = "text-center";
 
     const rollTd = document.createElement("td");
     rollTd.textContent = roll;
@@ -1180,4 +1181,10 @@ function init() {
   render();
 }
 
-window.addEventListener("DOMContentLoaded", init);
+window.addEventListener("DOMContentLoaded", () => {
+  init();
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js")
+      .catch((err) => console.error("SW registration failed", err));
+  }
+});
