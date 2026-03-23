@@ -1,6 +1,6 @@
 // Cloudflare Worker URL (The backend API)
 let API_BASE_URL = "";
-console.log("App Version: 1.7 - Fix Teacher Login");
+console.log("App Version: 1.8 - Live Check");
 
 const state = {
   sheets: {},
@@ -1165,7 +1165,6 @@ function init() {
   // Sync with the server
   loadPrincipalsFromAPI();
   loadTeachersFromAPI();
-  loadSheetsFromAPI();
   loadSheetsFromAPI();
   render();
 }
