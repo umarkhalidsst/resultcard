@@ -1,6 +1,6 @@
 // Cloudflare Worker URL (The backend API)
 let API_BASE_URL = "";
-console.log("App Version: 2.6 - Fix Principal Re-Approval Bug");
+console.log("App Version: 2.8 - Android Manifest Fix");
 
 const state = {
   sheets: {},
@@ -17,6 +17,7 @@ const elements = {
   signedInUser: document.getElementById("signed-in-user"),
   signedInRole: document.getElementById("signed-in-role"),
   logout: document.getElementById("logout"),
+  installApp: document.getElementById("install-app"),
   adminPanel: document.getElementById("admin-panel"),
   pendingPrincipals: document.getElementById("pending-principals"),
   principalDashboard: document.getElementById("principal-dashboard"),
@@ -1077,6 +1078,27 @@ function sendClassMessage() {
   elements.messageArea.classList.remove("hidden");
 }
 
+// PWA Install Prompt Logic
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent the mini-infobar from appearing on mobile
+  e.preventDefault();
+  // Stash the event so it can be triggered later.
+  deferredPrompt = e;
+  // Update UI notify the user they can install the PWA
+  if (elements.installApp) {
+    elements.installApp.classList.remove("hidden");
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  // Hide the app-provided install promotion
+  if (elements.installApp) elements.installApp.classList.add("hidden");
+  deferredPrompt = null;
+  console.log('PWA was installed');
+});
+
 function init() {
   elements.fileInput.addEventListener("change", (event) => {
     const file = event.target.files[0];
@@ -1185,6 +1207,20 @@ function init() {
     clearSession();
     render();
   });
+
+  if (elements.installApp) {
+    elements.installApp.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      // Hide the app provided install promotion
+      elements.installApp.classList.add("hidden");
+      // Show the install prompt
+      deferredPrompt.prompt();
+      // Wait for the user to respond to the prompt
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response to the install prompt: ${outcome}`);
+      deferredPrompt = null;
+    });
+  }
 
   // Load data from local storage for a fast initial load
   loadTeachers();
