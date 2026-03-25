@@ -1,0 +1,13 @@
+name = "attendance"
+main = "worker.js"
+compatibility_date = "2024-03-20"
+
+[observability]
+enabled = true
+
+[site]
+bucket = "./public"
+
+[[kv_namespaces]]
+binding = "ATTENDANCE_KV"
+id = "1fa8a8a88ca34cf3be6b19d7ade3c48a"
