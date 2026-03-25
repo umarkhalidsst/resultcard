@@ -1,12 +1,6 @@
-<<<<<<< HEAD
-"node_modules/" 
-".env" 
-".DS_Store" 
-=======
 node_modules/
 .env
 npm-debug.log
 *.log
 .DS_Store
 .wrangler/
->>>>>>> 08b41a1144708d097d16848e517f7c39519c83ce

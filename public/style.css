@@ -1,486 +1,68 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Result Card System</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
-    <!-- html2pdf.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-</head>
-<body class="bg-light">
+/* General Dashboard Styles */
+body {
+    background-color: #f0f2f5;
+}
 
-    <!-- 1. LOGIN SECTION -->
-    <div id="login-section" class="container d-flex justify-content-center align-items-center min-vh-100">
-        <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
-            <div class="text-center mb-4">
-                <i class="fas fa-graduation-cap fa-3x text-primary"></i>
-                <h3 class="mt-2">Teacher Login</h3>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Username</label>
-                <input type="text" id="username" class="form-control" placeholder="admin">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" id="password" class="form-control" placeholder="1234">
-            </div>
-            <button class="btn btn-primary w-100" onclick="handleLogin()">Login</button>
-            <p class="text-center mt-3 text-muted small">Default: admin / 1234</p>
-        </div>
-    </div>
+/* A4 Result Card Styling */
+.result-card {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm;
+    background: white;
+    position: relative;
+    font-family: 'Times New Roman', serif;
+}
 
-    <!-- 2. DASHBOARD SECTION -->
-    <div id="dashboard-section" class="container py-4 d-none">
-        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-            <h2><i class="fas fa-edit text-primary"></i> Result Generator</h2>
-            <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
-        </div>
+.logo-box {
+    font-size: 3rem;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
 
-        <div class="row g-4 no-print">
-            <!-- Student Details Form -->
-            <div class="col-md-4">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white">Student Details</div>
-                    <div class="card-body">
-                        <input type="text" id="schoolName" class="form-control mb-2" placeholder="School Name" value="FUTURE SCHOLARS HIGH SCHOOL">
-                        <input type="text" id="studentName" class="form-control mb-2" placeholder="Student Name">
-                        <input type="text" id="fatherName" class="form-control mb-2" placeholder="Father's Name">
-                        <div class="row g-2">
-                            <div class="col-6"><input type="text" id="rollNo" class="form-control mb-2" placeholder="Roll No"></div>
-                            <div class="col-6"><input type="text" id="class" class="form-control mb-2" placeholder="Class"></div>
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-6"><input type="text" id="section" class="form-control mb-2" placeholder="Section"></div>
-                            <div class="col-6"><input type="text" id="session" class="form-control mb-2" placeholder="Session" value="2025-2026"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+.header-section h1 {
+    font-family: 'Georgia', serif;
+    color: #1a237e;
+    font-size: 2.5rem;
+}
 
-            <!-- Marks Entry Form -->
-            <div class="col-md-8">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-secondary text-white d-flex justify-content-between">
-                        <span>Subject Marks</span>
-                        <button class="btn btn-light btn-sm py-0" onclick="addSubjectRow()">+ Add Subject</button>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Subject</th>
-                                    <th>Total Marks</th>
-                                    <th>Obtained</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="marks-body">
-                                <!-- Rows added by JS -->
-                            </tbody>
-                        </table>
-                        <button class="btn btn-success w-100" onclick="generateResult()">
-                            <i class="fas fa-print"></i> Generate & Preview Card
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+.info-grid {
+    border: 2px solid #333;
+    padding: 15px;
+    border-radius: 5px;
+}
 
-        <!-- 3. RESULT CARD PREVIEW (Visible after generation) -->
-        <div id="preview-container" class="mt-5 d-none justify-content-center">
-            <div class="text-center mb-3 no-print gap-2 d-flex justify-content-center">
-                <button class="btn btn-outline-secondary" onclick="editData()"><i class="fas fa-arrow-left"></i> Edit</button>
-                <button class="btn btn-primary" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> Download PDF</button>
-                <button class="btn btn-success" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
-            </div>
-            
-            <!-- ACTUAL A4 CARD -->
-            <div id="result-card" class="result-card bg-white shadow-lg mx-auto">
-                <!-- Header -->
-                <div class="text-center border-bottom pb-3 mb-3 header-section">
-                    <div class="logo-box"><i class="fas fa-university"></i></div>
-                    <h1 id="disp-school" class="fw-bold text-uppercase mb-0">School Name</h1>
-                    <p class="mb-0 text-muted">Excellence in Education | est. 2020</p>
-                    <div class="badge bg-dark text-white mt-2 px-3 py-1">ANNUAL RESULT CARD</div>
-                </div>
+.info-grid .col-6 {
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    border-bottom: 1px dotted #ccc;
+}
 
-                <!-- Info Grid -->
-                <div class="info-grid mb-4">
-                    <div class="row">
-                        <div class="col-6"><span class="fw-bold">Student:</span> <span id="disp-name"></span></div>
-                        <div class="col-6"><span class="fw-bold">Roll No:</span> <span id="disp-roll"></span></div>
-                        <div class="col-6"><span class="fw-bold">Father's Name:</span> <span id="disp-father"></span></div>
-                        <div class="col-6"><span class="fw-bold">Class:</span> <span id="disp-class"></span> <span id="disp-section"></span></div>
-                        <div class="col-6"><span class="fw-bold">Session:</span> <span id="disp-session"></span></div>
-                    </div>
-                </div>
+.result-table th {
+    background-color: #2c3e50 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact; 
+}
 
-                <!-- Marks Table -->
-                <table class="table table-bordered table-striped text-center result-table">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Subject</th>
-                            <th>Total Marks</th>
-                            <th>Obtained</th>
-                            <th>Percentage</th>
-                            <th>Grade</th>
-                        </tr>
-                    </thead>
-                    <tbody id="disp-marks-body"></tbody>
-                    <tfoot class="fw-bold bg-light">
-                        <tr>
-                            <td>GRAND TOTAL</td>
-                            <td id="grand-total-max"></td>
-                            <td id="grand-total-obt"></td>
-                            <td id="grand-percentage"></td>
-                            <td id="grand-grade"></td>
-                        </tr>
-                    </tfoot>
-                </table>
-
-                <!-- Remarks & Footer -->
-                <div class="mt-4 p-3 border rounded bg-light">
-                    <strong>Remarks:</strong> <span id="disp-remarks" class="fst-italic"></span>
-                </div>
-
-                <div class="footer-signatures d-flex justify-content-between mt-5 pt-5">
-                    <div class="text-center border-top px-4 pt-1">Class Teacher</div>
-                    <div class="text-center border-top px-4 pt-1">Principal</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-</body>
-</html>
-// Default Subjects
-const DEFAULT_SUBJECTS = [
-    { name: "English", total: "" },
-    { name: "Mathematics", total: "" },
-    { name: "Science", total: "" },
-    { name: "Social Studies", total: "" },
-    { name: "Computer", total: "" }
-];
-
-// --- Login Logic ---
-function handleLogin() {
-    const u = document.getElementById('username').value;
-    const p = document.getElementById('password').value;
-    
-    if(u === "admin" && p === "1234") {
-        document.getElementById('login-section').classList.add('d-none');
-        document.getElementById('dashboard-section').classList.remove('d-none');
-        initDashboard();
-    } else {
-        alert("Invalid Credentials! (Try: admin / 1234)");
+/* Print Media Query - Hides dashboard, shows only card */
+@media print {
+    body * {
+        visibility: hidden;
     }
-}
-
-function logout() {
-    location.reload();
-}
-
-// --- Dashboard Logic ---
-function initDashboard() {
-    const tbody = document.getElementById('marks-body');
-    tbody.innerHTML = '';
-    
-    DEFAULT_SUBJECTS.forEach(sub => {
-        addSubjectRow(sub.name, sub.total);
-    });
-}
-
-function addSubjectRow(name = "", total = "") {
-    const tbody = document.getElementById('marks-body');
-    const row = document.createElement('tr');
-    
-    row.innerHTML = `
-        <td><input type="text" class="form-control subject-name" value="${name}" placeholder="Subject"></td>
-        <td><input type="number" class="form-control subject-total" value="" placeholder="100"></td>
-        <td><input type="number" class="form-control subject-obt" placeholder="0"></td>
-        <td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">X</button></td>
-    `;
-    tbody.appendChild(row);
-}
-
-// --- Calculation & Generation Logic ---
-function calculateGrade(percentage) {
-    if (percentage >= 90) return 'A+';
-    if (percentage >= 80) return 'A';
-    if (percentage >= 70) return 'B';
-    if (percentage >= 60) return 'C';
-    if (percentage >= 50) return 'D';
-    return 'F';
-}
-
-function getRemarks(percentage) {
-    if (percentage >= 90) return "Excellent Performance! Keep it up.";
-    if (percentage >= 75) return "Very Good. Consistent effort shown.";
-    if (percentage >= 60) return "Good. Can improve with more focus.";
-    if (percentage >= 50) return "Needs Improvement. Work harder.";
-    return "Fail. Critical attention required.";
-}
-
-function generateResult() {
-    // 1. Get Student Info
-    const school = document.getElementById('schoolName').value;
-    const name = document.getElementById('studentName').value;
-    const father = document.getElementById('fatherName').value;
-    const roll = document.getElementById('rollNo').value;
-    const cls = document.getElementById('class').value;
-    const sec = document.getElementById('section').value;
-    const sess = document.getElementById('session').value;
-
-    if(!name || !roll) {
-        alert("Please fill in Student Name and Roll Number.");
-        return;
+    #result-card, #result-card * {
+        visibility: visible;
     }
-
-    // 2. Populate Info Grid
-    document.getElementById('disp-school').textContent = school;
-    document.getElementById('disp-name').textContent = name;
-    document.getElementById('disp-father').textContent = father;
-    document.getElementById('disp-roll').textContent = roll;
-    document.getElementById('disp-class').textContent = cls;
-    document.getElementById('disp-section').textContent = `()`;
-    document.getElementById('disp-session').textContent = sess;
-
-    // 3. Process Marks
-    const rows = document.querySelectorAll('#marks-body tr');
-    const dispBody = document.getElementById('disp-marks-body');
-    dispBody.innerHTML = '';
-
-    let grandTotalMax = 0;
-    let grandTotalObt = 0;
-
-    rows.forEach(row => {
-        const sub = row.querySelector('.subject-name').value;
-        const total = parseFloat(row.querySelector('.subject-total').value) || 0;
-        const obt = parseFloat(row.querySelector('.subject-obt').value) || 0;
-
-        if(!sub) return;
-
-        const perc = total > 0 ? ((obt / total) * 100).toFixed(1) : 0;
-        const grade = calculateGrade(perc);
-        
-        grandTotalMax += total;
-        grandTotalObt += obt;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="text-start ps-3"></td>
-            <td></td>
-            <td></td>
-            <td>%</td>
-            <td class="fw-bold ${grade === 'F' ? 'text-danger' : ''}"></td>
-        `;
-        dispBody.appendChild(tr);
-    });
-
-    // 4. Totals
-    const grandPerc = grandTotalMax > 0 ? ((grandTotalObt / grandTotalMax) * 100).toFixed(2) : 0;
-    const grandGrade = calculateGrade(grandPerc);
-    const remarks = getRemarks(grandPerc);
-
-    document.getElementById('grand-total-max').textContent = grandTotalMax;
-    document.getElementById('grand-total-obt').textContent = grandTotalObt;
-    document.getElementById('grand-percentage').textContent = grandPerc + "%";
-    document.getElementById('grand-grade').textContent = grandGrade;
-    document.getElementById('disp-remarks').textContent = remarks;
-
-    // 5. Show Preview
-    document.getElementById('preview-container').classList.remove('d-none');
-    document.getElementById('preview-container').classList.add('d-flex');
-    
-    // Scroll to preview
-    document.getElementById('preview-container').scrollIntoView({ behavior: 'smooth' });
-}
-
-function editData() {
-    document.getElementById('preview-container').classList.add('d-none');
-    document.getElementById('preview-container').classList.remove('d-flex');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function downloadPDF() {
-    const element = document.getElementById('result-card');
-    const name = document.getElementById('studentName').value || 'student';
-    const opt = {
-        margin:       0,
-        filename:     `_ResultCard.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(element).save();
-}
-// Default Subjects
-const DEFAULT_SUBJECTS = [
-    { name: "English", total: "" },
-    { name: "Mathematics", total: "" },
-    { name: "Science", total: "" },
-    { name: "Social Studies", total: "" },
-    { name: "Computer", total: "" }
-];
-
-// --- Login Logic ---
-function handleLogin() {
-    const u = document.getElementById('username').value;
-    const p = document.getElementById('password').value;
-    
-    if(u === "admin" && p === "1234") {
-        document.getElementById('login-section').classList.add('d-none');
-        document.getElementById('dashboard-section').classList.remove('d-none');
-        initDashboard();
-    } else {
-        alert("Invalid Credentials! (Try: admin / 1234)");
+    #result-card {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 10mm;
+        box-shadow: none !important;
     }
-}
-
-function logout() {
-    location.reload();
-}
-
-// --- Dashboard Logic ---
-function initDashboard() {
-    const tbody = document.getElementById('marks-body');
-    tbody.innerHTML = '';
-    
-    DEFAULT_SUBJECTS.forEach(sub => {
-        addSubjectRow(sub.name, sub.total);
-    });
-}
-
-function addSubjectRow(name = "", total = "") {
-    const tbody = document.getElementById('marks-body');
-    const row = document.createElement('tr');
-    
-    row.innerHTML = `
-        <td><input type="text" class="form-control subject-name" value="${name}" placeholder="Subject"></td>
-        <td><input type="number" class="form-control subject-total" value="" placeholder="100"></td>
-        <td><input type="number" class="form-control subject-obt" placeholder="0"></td>
-        <td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">X</button></td>
-    `;
-    tbody.appendChild(row);
-}
-
-// --- Calculation & Generation Logic ---
-function calculateGrade(percentage) {
-    if (percentage >= 90) return 'A+';
-    if (percentage >= 80) return 'A';
-    if (percentage >= 70) return 'B';
-    if (percentage >= 60) return 'C';
-    if (percentage >= 50) return 'D';
-    return 'F';
-}
-
-function getRemarks(percentage) {
-    if (percentage >= 90) return "Excellent Performance! Keep it up.";
-    if (percentage >= 75) return "Very Good. Consistent effort shown.";
-    if (percentage >= 60) return "Good. Can improve with more focus.";
-    if (percentage >= 50) return "Needs Improvement. Work harder.";
-    return "Fail. Critical attention required.";
-}
-
-function generateResult() {
-    // 1. Get Student Info
-    const school = document.getElementById('schoolName').value;
-    const name = document.getElementById('studentName').value;
-    const father = document.getElementById('fatherName').value;
-    const roll = document.getElementById('rollNo').value;
-    const cls = document.getElementById('class').value;
-    const sec = document.getElementById('section').value;
-    const sess = document.getElementById('session').value;
-
-    if(!name || !roll) {
-        alert("Please fill in Student Name and Roll Number.");
-        return;
+    .no-print {
+        display: none !important;
     }
-
-    // 2. Populate Info Grid
-    document.getElementById('disp-school').textContent = school;
-    document.getElementById('disp-name').textContent = name;
-    document.getElementById('disp-father').textContent = father;
-    document.getElementById('disp-roll').textContent = roll;
-    document.getElementById('disp-class').textContent = cls;
-    document.getElementById('disp-section').textContent = `()`;
-    document.getElementById('disp-session').textContent = sess;
-
-    // 3. Process Marks
-    const rows = document.querySelectorAll('#marks-body tr');
-    const dispBody = document.getElementById('disp-marks-body');
-    dispBody.innerHTML = '';
-
-    let grandTotalMax = 0;
-    let grandTotalObt = 0;
-
-    rows.forEach(row => {
-        const sub = row.querySelector('.subject-name').value;
-        const total = parseFloat(row.querySelector('.subject-total').value) || 0;
-        const obt = parseFloat(row.querySelector('.subject-obt').value) || 0;
-
-        if(!sub) return;
-
-        const perc = total > 0 ? ((obt / total) * 100).toFixed(1) : 0;
-        const grade = calculateGrade(perc);
-        
-        grandTotalMax += total;
-        grandTotalObt += obt;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="text-start ps-3"></td>
-            <td></td>
-            <td></td>
-            <td>%</td>
-            <td class="fw-bold ${grade === 'F' ? 'text-danger' : ''}"></td>
-        `;
-        dispBody.appendChild(tr);
-    });
-
-    // 4. Totals
-    const grandPerc = grandTotalMax > 0 ? ((grandTotalObt / grandTotalMax) * 100).toFixed(2) : 0;
-    const grandGrade = calculateGrade(grandPerc);
-    const remarks = getRemarks(grandPerc);
-
-    document.getElementById('grand-total-max').textContent = grandTotalMax;
-    document.getElementById('grand-total-obt').textContent = grandTotalObt;
-    document.getElementById('grand-percentage').textContent = grandPerc + "%";
-    document.getElementById('grand-grade').textContent = grandGrade;
-    document.getElementById('disp-remarks').textContent = remarks;
-
-    // 5. Show Preview
-    document.getElementById('preview-container').classList.remove('d-none');
-    document.getElementById('preview-container').classList.add('d-flex');
-    
-    // Scroll to preview
-    document.getElementById('preview-container').scrollIntoView({ behavior: 'smooth' });
-}
-
-function editData() {
-    document.getElementById('preview-container').classList.add('d-none');
-    document.getElementById('preview-container').classList.remove('d-flex');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function downloadPDF() {
-    const element = document.getElementById('result-card');
-    const name = document.getElementById('studentName').value || 'student';
-    const opt = {
-        margin:       0,
-        filename:     `_ResultCard.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(element).save();
 }
 <!DOCTYPE html>
 <html lang="en">
