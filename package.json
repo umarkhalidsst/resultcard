@@ -12,5 +12,7 @@
     "express": "^4.19.2",
     "hono": "^4.2.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
 }

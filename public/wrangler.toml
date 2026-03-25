@@ -1,0 +1,7 @@
+name = "school-result-card"
+main = "worker.js"
+compatibility_date = "2024-03-25"
+
+[assets]
+directory = "public"
+binding = "ASSETS"
