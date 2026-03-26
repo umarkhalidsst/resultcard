@@ -13,7 +13,7 @@ const DEFAULT_SUBJECTS = [
 let LOGGED_IN_USER = null;
 
 function toggleAuth(showSignup) {
-    document.getElementById('login-section').classList.toggle('d-none', showSignup);
+    document.getElementById('login-card').classList.toggle('d-none', showSignup);
     document.getElementById('signup-section').classList.toggle('d-none', !showSignup);
 }
 
