@@ -1,5 +1,5 @@
 // API URL (Adjust port if needed)
-const API_URL = window.location.origin === 'http://localhost:3001' ? "http://localhost:3001/api" : "/api";
+const API_URL = "/api";
 
 // Default Subjects
 const DEFAULT_SUBJECTS = [
@@ -11,6 +11,28 @@ const DEFAULT_SUBJECTS = [
 ];
 
 let LOGGED_IN_USER = null;
+
+function toggleAuth(showSignup) {
+    document.getElementById('login-section').classList.toggle('d-none', showSignup);
+    document.getElementById('signup-section').classList.toggle('d-none', !showSignup);
+}
+
+async function handleSignup() {
+    const name = document.getElementById('reg-name').value;
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-pass').value;
+    const school_name = document.getElementById('reg-school').value;
+
+    const res = await fetch(`${API_URL}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, school_name })
+    });
+    if ((await res.json()).success) {
+        alert("Registration Successful! Now Login.");
+        toggleAuth(false);
+    }
+}
 
 // --- Login Logic ---
 async function handleLogin() {

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { serveStatic } from 'hono/cloudflare-workers';
 
 const app = new Hono();
 
@@ -16,18 +17,31 @@ let STUDENTS = [
 
 // --- Auth Routes ---
 app.post('/api/login', async (c) => {
-    const { email, password } = await c.req.json();
-    const user = USERS.find(u => u.email === email && u.password === password);
-    if (user) {
-        const { password: _, ...userWithoutPassword } = user;
-        return c.json({ success: true, user: userWithoutPassword });
+    try {
+        const { email, password } = await c.req.json();
+        const user = USERS.find(u => u.email === email && u.password === password);
+        if (user) {
+            const { password: _, ...userWithoutPassword } = user;
+            return c.json({ success: true, user: userWithoutPassword });
+        }
+        return c.json({ error: "Invalid credentials" }, 401);
+    } catch (err) {
+        return c.json({ error: "Invalid request format" }, 400);
     }
-    return c.json({ error: "Invalid credentials" }, 401);
 });
 
 // --- Admin Routes ---
 app.get('/api/admin/data', (c) => {
     return c.json({ schools: SCHOOLS, principals: USERS.filter(u => u.role === 'Principal') });
+});
+
+// Principal Sign-up (Self-service)
+app.post('/api/signup', async (c) => {
+    const { name, email, password, school_name } = await c.req.json();
+    const school_id = "s" + Date.now();
+    SCHOOLS.push({ id: school_id, name: school_name });
+    USERS.push({ id: "u" + Date.now(), name, email, password, role: "Principal", school_id });
+    return c.json({ success: true });
 });
 
 app.post('/api/admin/principals', async (c) => {
@@ -82,5 +96,9 @@ app.post('/api/students/:id/marks', async (c) => {
     }
     return c.json({ error: "Student not found" }, 404);
 });
+
+// --- Serve Static Frontend Assets (Must be at the end) ---
+app.get('/', serveStatic({ path: './index.html' }));
+app.use('/*', serveStatic({ root: './' }));
 
 export default app;

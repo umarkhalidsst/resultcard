@@ -31,6 +31,20 @@
                 <input type="password" id="password" class="form-control" placeholder="1234">
             </div>
             <button class="btn btn-primary w-100" onclick="handleLogin()">Login</button>
+            <div class="text-center mt-3">
+                <a href="#" onclick="toggleAuth(true)">Principal Sign Up Request</a>
+            </div>
+        </div>
+
+        <!-- SIGNUP SECTION -->
+        <div id="signup-section" class="card shadow p-4 d-none" style="max-width: 400px; width: 100%;">
+            <h3 class="text-center mb-4">Principal Registration</h3>
+            <input type="text" id="reg-name" class="form-control mb-2" placeholder="Full Name">
+            <input type="email" id="reg-email" class="form-control mb-2" placeholder="Email">
+            <input type="password" id="reg-pass" class="form-control mb-2" placeholder="Password">
+            <input type="text" id="reg-school" class="form-control mb-3" placeholder="School Name">
+            <button class="btn btn-success w-100" onclick="handleSignup()">Submit Request</button>
+            <div class="text-center mt-3"><a href="#" onclick="toggleAuth(false)">Back to Login</a></div>
         </div>
     </div>
 
@@ -227,6 +241,37 @@
                     <div class="text-center border-top px-4 pt-1">Class Teacher</div>
                     <div class="text-center border-top px-4 pt-1">Principal</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD PRINCIPAL (For Admin) -->
+    <div class="modal fade" id="addPrincipalModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Add Principal</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="text" id="admin-p-name" class="form-control mb-2" placeholder="Name">
+                    <input type="email" id="admin-p-email" class="form-control mb-2" placeholder="Email">
+                    <input type="password" id="admin-p-pass" class="form-control mb-2" placeholder="Password">
+                    <select id="admin-p-school" class="form-select"></select>
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="submitAddPrincipal()">Save</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD TEACHER (For Principal) -->
+    <div class="modal fade" id="addTeacherModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Add Teacher</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="text" id="p-t-name" class="form-control mb-2" placeholder="Teacher Name">
+                    <input type="email" id="p-t-email" class="form-control mb-2" placeholder="Email">
+                    <input type="password" id="p-t-pass" class="form-control mb-2" placeholder="Password">
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="submitAddTeacher()">Save Teacher</button></div>
             </div>
         </div>
     </div>
