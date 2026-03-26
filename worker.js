@@ -7,9 +7,9 @@ const app = new Hono();
 // Note: This resets when the Worker goes idle.
 let SCHOOLS = [{ id: "s1", name: "FUTURE SCHOLARS HIGH SCHOOL" }];
 let USERS = [
-    { id: "u1", name: "System Admin", email: "admin@school.com", password: "123", role: "Admin" },
-    { id: "u2", name: "Principal John", email: "principal@school.com", password: "123", role: "Principal", school_id: "s1" },
-    { id: "u3", name: "Teacher Sarah", email: "teacher@school.com", password: "123", role: "Teacher", school_id: "s1" }
+    { id: "u1", name: "System Admin", email: "admin@school.com", password: "123", role: "Admin", approved: true },
+    { id: "u2", name: "Principal John", email: "principal@school.com", password: "123", role: "Principal", school_id: "s1", approved: true },
+    { id: "u3", name: "Teacher Sarah", email: "teacher@school.com", password: "123", role: "Teacher", school_id: "s1", approved: true }
 ];
 let STUDENTS = [
     { id: "st1", name: "Ali Ahmed", rollNo: "101", fatherName: "Ahmed", studentClass: "10th", school_id: "s1", marks: [] }
@@ -21,6 +21,9 @@ app.post('/api/login', async (c) => {
         const { email, password } = await c.req.json();
         const user = USERS.find(u => u.email === email && u.password === password);
         if (user) {
+            if (user.role !== 'Admin' && !user.approved) {
+                return c.json({ error: "Wait for Admin Approval" }, 403);
+            }
             const { password: _, ...userWithoutPassword } = user;
             return c.json({ success: true, user: userWithoutPassword });
         }
@@ -32,7 +35,11 @@ app.post('/api/login', async (c) => {
 
 // --- Admin Routes ---
 app.get('/api/admin/data', (c) => {
-    return c.json({ schools: SCHOOLS, principals: USERS.filter(u => u.role === 'Principal') });
+    return c.json({ 
+        schools: SCHOOLS, 
+        principals: USERS.filter(u => u.role === 'Principal' && u.approved),
+        pending: USERS.filter(u => u.role === 'Principal' && !u.approved)
+    });
 });
 
 // Principal Sign-up (Self-service)
@@ -40,14 +47,24 @@ app.post('/api/signup', async (c) => {
     const { name, email, password, school_name } = await c.req.json();
     const school_id = "s" + Date.now();
     SCHOOLS.push({ id: school_id, name: school_name });
-    USERS.push({ id: "u" + Date.now(), name, email, password, role: "Principal", school_id });
+    USERS.push({ id: "u" + Date.now(), name, email, password, role: "Principal", school_id, approved: false });
     return c.json({ success: true });
 });
 
 app.post('/api/admin/principals', async (c) => {
     const { name, email, password, school_id } = await c.req.json();
-    USERS.push({ id: Date.now().toString(), name, email, password, role: "Principal", school_id });
+    USERS.push({ id: Date.now().toString(), name, email, password, role: "Principal", school_id, approved: true });
     return c.json({ success: true });
+});
+
+app.post('/api/admin/approve', async (c) => {
+    const { user_id } = await c.req.json();
+    const user = USERS.find(u => u.id === user_id);
+    if (user) {
+        user.approved = true;
+        return c.json({ success: true });
+    }
+    return c.json({ error: "User not found" }, 404);
 });
 
 // --- Principal Routes ---
@@ -98,7 +115,7 @@ app.post('/api/students/:id/marks', async (c) => {
 });
 
 // --- Serve Static Frontend Assets (Must be at the end) ---
-app.get('/', serveStatic({ path: './index.html' }));
-app.use('/*', serveStatic({ root: './' }));
+app.get('/', serveStatic({ path: './public/index.html' }));
+app.use('/*', serveStatic({ root: './public' }));
 
 export default app;

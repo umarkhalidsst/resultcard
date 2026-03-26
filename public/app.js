@@ -61,7 +61,7 @@ async function handleLogin() {
             loadStudents(); 
         }
     } else {
-        alert("Invalid Login!");
+        alert(data.error || "Invalid Login!");
     }
 }
 
@@ -171,15 +171,79 @@ function showClassList() {
 }
 
 // --- Placeholder functions for Admin/Principal views ---
+// --- Admin Dashboard Logic ---
 async function loadAdminData() {
     const res = await fetch(`${API_URL}/admin/data`);
     const data = await res.json();
+    
+    // Render Principals Table
     const list = document.getElementById('admin-principals-list');
-    list.innerHTML = data.principals.map(p => 
-        `<tr><td>${p.name}</td><td>${p.email}</td><td>${p.school_id}</td></tr>`
-    ).join('');
+    list.innerHTML = data.principals.map(p => {
+        const school = data.schools.find(s => s.id === p.school_id);
+        return `<tr><td>${p.name}</td><td>${p.email}</td><td>${school ? school.name : p.school_id}</td></tr>`;
+    }).join('');
+
+    // Render Pending List
+    const pendingList = document.getElementById('admin-pending-list');
+    if (pendingList) {
+        pendingList.innerHTML = data.pending.map(p => {
+            const school = data.schools.find(s => s.id === p.school_id);
+            return `<tr>
+                <td>${p.name}</td><td>${p.email}</td><td>${school ? school.name : p.school_id}</td>
+                <td><button class="btn btn-success btn-sm" onclick="approvePrincipal('${p.id}')">Approve</button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    // Populate Schools dropdown in Add Principal Modal
+    const schoolSelect = document.getElementById('admin-p-school');
+    if (schoolSelect) {
+        schoolSelect.innerHTML = data.schools.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    }
 }
 
+function showAddPrincipalModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addPrincipalModal'));
+    modal.show();
+}
+
+async function approvePrincipal(userId) {
+    const res = await fetch(`${API_URL}/admin/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+    });
+    if ((await res.json()).success) {
+        loadAdminData();
+        alert("Principal approved successfully!");
+    }
+}
+
+async function submitAddPrincipal() {
+    const name = document.getElementById('admin-p-name').value;
+    const email = document.getElementById('admin-p-email').value;
+    const password = document.getElementById('admin-p-pass').value;
+    const school_id = document.getElementById('admin-p-school').value;
+
+    if (!name || !email || !password || !school_id) {
+        alert("All fields are required");
+        return;
+    }
+
+    const res = await fetch(`${API_URL}/admin/principals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, school_id })
+    });
+
+    if ((await res.json()).success) {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('addPrincipalModal')).hide();
+        loadAdminData();
+        alert("Principal added successfully!");
+    }
+}
+
+// --- Principal Dashboard Logic ---
 async function loadPrincipalData() {
     const res = await fetch(`${API_URL}/principal/teachers/${LOGGED_IN_USER.school_id}`);
     const data = await res.json();
@@ -187,6 +251,34 @@ async function loadPrincipalData() {
     list.innerHTML = data.map(t => 
         `<tr><td>${t.name}</td><td>${t.email}</td></tr>`
     ).join('');
+}
+
+function showAddTeacherModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addTeacherModal'));
+    modal.show();
+}
+
+async function submitAddTeacher() {
+    const name = document.getElementById('p-t-name').value;
+    const email = document.getElementById('p-t-email').value;
+    const password = document.getElementById('p-t-pass').value;
+
+    if (!name || !email || !password) {
+        alert("All fields are required");
+        return;
+    }
+
+    const res = await fetch(`${API_URL}/principal/teachers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, school_id: LOGGED_IN_USER.school_id })
+    });
+
+    if ((await res.json()).success) {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('addTeacherModal')).hide();
+        loadPrincipalData();
+        alert("Teacher added successfully!");
+    }
 }
 
 // --- Dashboard Logic ---
