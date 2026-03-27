@@ -115,7 +115,6 @@ app.post('/api/students/:id/marks', async (c) => {
 });
 
 // --- Serve Static Frontend Assets (Must be at the end) ---
-app.get('/', serveStatic({ path: './index.html' }));
-app.use('/*', serveStatic({ root: './' }));
+app.get('/*', serveStatic({ root: './' }));
 
 export default app;

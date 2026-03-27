@@ -1,4 +1,4 @@
-const CACHE_NAME = "attendance-pwa-v9";
+const CACHE_NAME = "result-card-v1";
 const ASSETS = [
   "./",
   "./index.html",
