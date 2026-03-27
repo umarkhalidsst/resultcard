@@ -19,14 +19,14 @@ function toggleAuth(showSignup) {
 
 async function handleSignup() {
     const name = document.getElementById('reg-name').value;
-    const email = document.getElementById('reg-email').value;
+    const phone = document.getElementById('reg-phone').value;
     const password = document.getElementById('reg-pass').value;
     const school_name = document.getElementById('reg-school').value;
 
     const res = await fetch(`${API_URL}/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, school_name })
+        body: JSON.stringify({ name, phone, password, school_name })
     });
     if ((await res.json()).success) {
         alert("Registration Successful! Now Login.");
@@ -36,13 +36,13 @@ async function handleSignup() {
 
 // --- Login Logic ---
 async function handleLogin() {
-    const email = document.getElementById('email').value;
+    const phone = document.getElementById('phone').value;
     const password = document.getElementById('password').value;
     
     const res = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ phone, password })
     });
     const data = await res.json();
 
@@ -180,7 +180,7 @@ async function loadAdminData() {
     const list = document.getElementById('admin-principals-list');
     list.innerHTML = data.principals.map(p => {
         const school = data.schools.find(s => s.id === p.school_id);
-        return `<tr><td>${p.name}</td><td>${p.email}</td><td>${school ? school.name : p.school_id}</td></tr>`;
+        return `<tr><td>${p.name}</td><td>${p.phone}</td><td>${school ? school.name : p.school_id}</td></tr>`;
     }).join('');
 
     // Render Pending List
@@ -189,7 +189,7 @@ async function loadAdminData() {
         pendingList.innerHTML = data.pending.map(p => {
             const school = data.schools.find(s => s.id === p.school_id);
             return `<tr>
-                <td>${p.name}</td><td>${p.email}</td><td>${school ? school.name : p.school_id}</td>
+                <td>${p.name}</td><td>${p.phone}</td><td>${school ? school.name : p.school_id}</td>
                 <td><button class="btn btn-success btn-sm" onclick="approvePrincipal('${p.id}')">Approve</button></td>
             </tr>`;
         }).join('');
@@ -221,11 +221,11 @@ async function approvePrincipal(userId) {
 
 async function submitAddPrincipal() {
     const name = document.getElementById('admin-p-name').value;
-    const email = document.getElementById('admin-p-email').value;
+    const phone = document.getElementById('admin-p-phone').value;
     const password = document.getElementById('admin-p-pass').value;
     const school_id = document.getElementById('admin-p-school').value;
 
-    if (!name || !email || !password || !school_id) {
+    if (!name || !phone || !password || !school_id) {
         alert("All fields are required");
         return;
     }
@@ -233,7 +233,7 @@ async function submitAddPrincipal() {
     const res = await fetch(`${API_URL}/admin/principals`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, school_id })
+        body: JSON.stringify({ name, phone, password, school_id })
     });
 
     if ((await res.json()).success) {
@@ -249,7 +249,7 @@ async function loadPrincipalData() {
     const data = await res.json();
     const list = document.getElementById('principal-teachers-list');
     list.innerHTML = data.map(t => 
-        `<tr><td>${t.name}</td><td>${t.email}</td></tr>`
+        `<tr><td>${t.name}</td><td>${t.phone}</td></tr>`
     ).join('');
 }
 
@@ -260,10 +260,10 @@ function showAddTeacherModal() {
 
 async function submitAddTeacher() {
     const name = document.getElementById('p-t-name').value;
-    const email = document.getElementById('p-t-email').value;
+    const phone = document.getElementById('p-t-phone').value;
     const password = document.getElementById('p-t-pass').value;
 
-    if (!name || !email || !password) {
+    if (!name || !phone || !password) {
         alert("All fields are required");
         return;
     }
@@ -271,7 +271,7 @@ async function submitAddTeacher() {
     const res = await fetch(`${API_URL}/principal/teachers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, school_id: LOGGED_IN_USER.school_id })
+        body: JSON.stringify({ name, phone, password, school_id: LOGGED_IN_USER.school_id })
     });
 
     if ((await res.json()).success) {

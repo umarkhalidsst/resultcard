@@ -20,11 +20,11 @@
         <div id="login-card" class="card shadow p-4" style="max-width: 400px; width: 100%;">
             <div class="text-center mb-4">
                 <i class="fas fa-graduation-cap fa-3x text-primary"></i>
-                <h3 class="mt-2">School Portal Login</h3>
+                <h3 class="mt-2">School Portal</h3>
             </div>
             <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" id="email" class="form-control" placeholder="admin@school.com">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" id="phone" class="form-control" placeholder="03001234567">
             </div>
             <div class="mb-3">
                 <label class="form-label">Password</label>
@@ -40,7 +40,7 @@
         <div id="signup-section" class="card shadow p-4 d-none" style="max-width: 400px; width: 100%;">
             <h3 class="text-center mb-4">Principal Registration</h3>
             <input type="text" id="reg-name" class="form-control mb-2" placeholder="Full Name">
-            <input type="email" id="reg-email" class="form-control mb-2" placeholder="Email">
+            <input type="tel" id="reg-phone" class="form-control mb-2" placeholder="Phone Number">
             <input type="password" id="reg-pass" class="form-control mb-2" placeholder="Password">
             <input type="text" id="reg-school" class="form-control mb-3" placeholder="School Name">
             <button class="btn btn-success w-100" onclick="handleSignup()">Submit Request</button>
@@ -58,7 +58,7 @@
             <div class="card-header bg-warning text-dark">Pending Approvals</div>
             <div class="card-body">
                 <table class="table">
-                    <thead><tr><th>Name</th><th>Email</th><th>School</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Phone</th><th>School</th><th>Action</th></tr></thead>
                     <tbody id="admin-pending-list"></tbody>
                 </table>
             </div>
@@ -68,7 +68,7 @@
             <div class="card-header bg-dark text-white">Manage Principals</div>
             <div class="card-body">
                 <table class="table">
-                    <thead><tr><th>Name</th><th>Email</th><th>School</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Phone</th><th>School</th></tr></thead>
                     <tbody id="admin-principals-list"></tbody>
                 </table>
                 <button class="btn btn-primary" onclick="showAddPrincipalModal()">Add Principal</button>
@@ -86,7 +86,7 @@
             <div class="card-header bg-primary text-white">School Teachers</div>
             <div class="card-body">
                 <table class="table">
-                    <thead><tr><th>Name</th><th>Email</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Phone</th></tr></thead>
                     <tbody id="principal-teachers-list"></tbody>
                 </table>
                 <button class="btn btn-primary" onclick="showAddTeacherModal()">Add Teacher</button>
@@ -262,7 +262,7 @@
                 <div class="modal-header"><h5 class="modal-title">Add Principal</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
                     <input type="text" id="admin-p-name" class="form-control mb-2" placeholder="Name">
-                    <input type="email" id="admin-p-email" class="form-control mb-2" placeholder="Email">
+                    <input type="tel" id="admin-p-phone" class="form-control mb-2" placeholder="Phone Number">
                     <input type="password" id="admin-p-pass" class="form-control mb-2" placeholder="Password">
                     <select id="admin-p-school" class="form-select"></select>
                 </div>
@@ -278,7 +278,7 @@
                 <div class="modal-header"><h5 class="modal-title">Add Teacher</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
                     <input type="text" id="p-t-name" class="form-control mb-2" placeholder="Teacher Name">
-                    <input type="email" id="p-t-email" class="form-control mb-2" placeholder="Email">
+                    <input type="tel" id="p-t-phone" class="form-control mb-2" placeholder="Phone Number">
                     <input type="password" id="p-t-pass" class="form-control mb-2" placeholder="Password">
                 </div>
                 <div class="modal-footer"><button class="btn btn-primary" onclick="submitAddTeacher()">Save Teacher</button></div>
