@@ -166,7 +166,7 @@ async function addNewStudent() {
 function showClassList() {
     document.getElementById('marks-section').classList.add('d-none');
     document.getElementById('preview-container').classList.add('d-none');
-    document.getElementById('class-section').classList.remove('d-none');
+    document.getElementById('teacher-section').classList.remove('d-none');
     loadStudents(); // Refresh data
 }
 
@@ -286,7 +286,7 @@ let CURRENT_STUDENT = null;
 
 async function openMarksEntry(studentId) {
     // Hide list, show marks section
-    document.getElementById('class-section').classList.add('d-none');
+    document.getElementById('teacher-section').classList.add('d-none');
     document.getElementById('marks-section').classList.remove('d-none');
 
     // Fetch fresh data for this student
