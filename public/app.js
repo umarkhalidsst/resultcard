@@ -90,11 +90,13 @@ async function loadStudents() {
 }
 
 function filterStudents() {
-    const filterValue = document.getElementById('class-filter').value;
-    if (filterValue === "All") {
+    const filterEl = document.getElementById('class-filter');
+    const filterValue = (filterEl ? filterEl.value : "All").trim();
+
+    if (filterValue === "All" || filterValue === "") {
         renderStudentTable(ALL_STUDENTS);
     } else {
-        const filtered = ALL_STUDENTS.filter(s => s.studentClass === filterValue);
+        const filtered = ALL_STUDENTS.filter(s => (s.studentClass || "").trim() === filterValue);
         renderStudentTable(filtered);
     }
 }
@@ -493,54 +495,35 @@ function getRemarks(percentage) {
     return "Fail. Critical attention required.";
 }
 
-function generateResult() {
-    // 1. Get Student Info
-    const school = document.getElementById('schoolName').value;
-    const cls = document.getElementById('studentClass').value;
-    const sec = document.getElementById('studentSection').value;
-    const sess = document.getElementById('studentSession').value;
+function fillCardData(cardElement, student, metadata) {
+    cardElement.querySelector('#disp-school').textContent = metadata.school;
+    cardElement.querySelector('#disp-name').textContent = student.name;
+    cardElement.querySelector('#disp-father').textContent = student.fatherName;
+    cardElement.querySelector('#disp-roll').textContent = student.rollNo;
+    cardElement.querySelector('#disp-class').textContent = metadata.cls;
+    cardElement.querySelector('#disp-section').textContent = `(${metadata.sec})`;
+    cardElement.querySelector('#disp-session').textContent = metadata.sess;
 
-    // Use current student data
-    const name = CURRENT_STUDENT.name;
-    const father = CURRENT_STUDENT.fatherName;
-    const roll = CURRENT_STUDENT.rollNo;
-
-    // 2. Populate Info Grid
-    document.getElementById('disp-school').textContent = school;
-    
-    // Handle Logo rendering
-    const logoImg = document.getElementById('disp-logo-img');
-    const logoIcon = document.getElementById('disp-logo-icon');
+    const logoImg = cardElement.querySelector('#disp-logo-img');
+    const logoIcon = cardElement.querySelector('#disp-logo-icon');
     if (LOGGED_IN_SCHOOL && LOGGED_IN_SCHOOL.logo) {
         logoImg.src = LOGGED_IN_SCHOOL.logo;
         logoImg.classList.remove('d-none');
-        logoIcon.classList.add('d-none');
+        if (logoIcon) logoIcon.classList.add('d-none');
     } else {
         logoImg.classList.add('d-none');
-        logoIcon.classList.remove('d-none');
+        if (logoIcon) logoIcon.classList.remove('d-none');
     }
 
-    document.getElementById('disp-name').textContent = name;
-    document.getElementById('disp-father').textContent = father;
-    document.getElementById('disp-roll').textContent = roll;
-    document.getElementById('disp-class').textContent = cls;
-    document.getElementById('disp-section').textContent = `(${sec})`;
-    document.getElementById('disp-session').textContent = sess;
-
-    // 3. Process Marks
-    const rows = document.querySelectorAll('#marks-body tr');
-    const dispBody = document.getElementById('disp-marks-body');
+    const dispBody = cardElement.querySelector('#disp-marks-body');
     dispBody.innerHTML = '';
-
     let grandTotalMax = 0;
     let grandTotalObt = 0;
 
-    rows.forEach(row => {
-        const sub = row.querySelector('.subject-name').value;
-        const total = parseFloat(row.querySelector('.subject-total').value) || 0;
-        const obt = parseFloat(row.querySelector('.subject-obt').value) || 0;
-
-        if(!sub) return;
+    student.marks.forEach(m => {
+        const sub = m.name;
+        const total = parseFloat(m.total) || 0;
+        const obt = parseFloat(m.obtained) || 0;
 
         const perc = total > 0 ? ((obt / total) * 100).toFixed(1) : 0;
         const grade = calculateGrade(perc);
@@ -564,18 +547,80 @@ function generateResult() {
     const grandGrade = calculateGrade(grandPerc);
     const remarks = getRemarks(grandPerc);
 
-    document.getElementById('grand-total-max').textContent = grandTotalMax;
-    document.getElementById('grand-total-obt').textContent = grandTotalObt;
-    document.getElementById('grand-percentage').textContent = grandPerc + "%";
-    document.getElementById('grand-grade').textContent = grandGrade;
-    document.getElementById('disp-remarks').textContent = remarks;
+    cardElement.querySelector('#grand-total-max').textContent = grandTotalMax;
+    cardElement.querySelector('#grand-total-obt').textContent = grandTotalObt;
+    cardElement.querySelector('#grand-percentage').textContent = grandPerc + "%";
+    cardElement.querySelector('#grand-grade').textContent = grandGrade;
+    cardElement.querySelector('#disp-remarks').textContent = remarks;
+}
+
+function generateResult() {
+    const metadata = {
+        school: document.getElementById('schoolName').value,
+        cls: document.getElementById('studentClass').value,
+        sec: document.getElementById('studentSection').value,
+        sess: document.getElementById('studentSession').value
+    };
+
+    // Temporarily sync DOM marks back to CURRENT_STUDENT object for filling
+    const rows = document.querySelectorAll('#marks-body tr');
+    CURRENT_STUDENT.marks = Array.from(rows).map(row => ({
+        name: row.querySelector('.subject-name').value,
+        total: row.querySelector('.subject-total').value,
+        obtained: row.querySelector('.subject-obt').value
+    })).filter(m => m.name);
+
+    fillCardData(document.getElementById('result-card'), CURRENT_STUDENT, metadata);
 
     // 5. Show Preview
     document.getElementById('preview-container').classList.remove('d-none');
     document.getElementById('preview-container').classList.add('d-flex');
-    
-    // Scroll to preview
     document.getElementById('preview-container').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function printAllCards() {
+    const filterValue = document.getElementById('class-filter').value;
+    const studentsToPrint = filterValue === "All" 
+        ? ALL_STUDENTS 
+        : ALL_STUDENTS.filter(s => (s.studentClass || "").trim() === filterValue);
+
+    if (studentsToPrint.length === 0) {
+        alert("No students found in this class to print.");
+        return;
+    }
+
+    const metadata = {
+        school: "GHS Chitti Sheikhan", // Default or pull from school profile
+        cls: filterValue === "All" ? "Various" : filterValue,
+        sec: "A",
+        sess: "2025-2026"
+    };
+
+    const printContainer = document.createElement('div');
+    const template = document.getElementById('result-card');
+
+    studentsToPrint.forEach((student, index) => {
+        const cardClone = template.cloneNode(true);
+        cardClone.id = `print-card-${index}`;
+        
+        // Ensure the card has a page break after it
+        cardClone.style.marginBottom = "50px"; 
+        cardClone.style.pageBreakAfter = "always";
+
+        fillCardData(cardClone, student, metadata);
+        printContainer.appendChild(cardClone);
+    });
+
+    const opt = {
+        margin: [10, 10],
+        filename: `Class_${metadata.cls}_Results.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    alert(`Preparing ${studentsToPrint.length} result cards... Please wait.`);
+    await html2pdf().set(opt).from(printContainer).save();
 }
 
 function editData() {

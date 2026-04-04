@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/cloudflare-workers';
+import manifest from '__STATIC_CONTENT_MANIFEST';
 
 const app = new Hono();
 
@@ -18,11 +19,12 @@ let STUDENTS = [
 // --- Auth Routes ---
 app.post('/api/login', async (c) => {
     try {
-        const { phone, password } = await c.req.json();
+        const body = await c.req.json().catch(() => ({}));
+        const { phone, password } = body;
         
         // Use environment variables for admin if available in the worker context
-        const adminPhone = c.env?.ADMIN_PHONE || "03217193209";
-        const adminPass = c.env?.ADMIN_PASSWORD || "Umar@8627";
+        const adminPhone = (c.env && c.env.ADMIN_PHONE) || "03217193209";
+        const adminPass = (c.env && c.env.ADMIN_PASSWORD) || "Umar@8627";
 
         const foundUser = USERS.find(u => {
             const isSystemAdmin = u.id === "u1" && phone === adminPhone && password === adminPass;
@@ -131,7 +133,13 @@ app.post('/api/students', async (c) => {
 });
 
 app.post('/api/upload-students', async (c) => {
-    const { students } = await c.req.json();
+    const body = await c.req.json().catch(() => ({}));
+    const { students } = body;
+    
+    if (!students || !Array.isArray(students)) {
+        return c.json({ error: "Invalid data format: 'students' array required" }, 400);
+    }
+
     students.forEach(s => {
         s.id = "st" + Date.now() + Math.random().toString(36).substr(2, 5);
         if (!s.marks) s.marks = [];
@@ -152,6 +160,10 @@ app.post('/api/students/:id/marks', async (c) => {
 });
 
 // --- Serve Static Frontend Assets (Must be at the end) ---
-app.get('/*', serveStatic({ root: './' }));
+app.use('/*', serveStatic({ 
+    root: './', 
+    manifest,
+    rewriteRequestPath: (path) => (path === '/' ? '/index.html' : path)
+}));
 
 export default app;

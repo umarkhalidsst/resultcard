@@ -105,6 +105,10 @@ app.post('/api/students', (req, res) => {
 
 app.post('/api/upload-students', (req, res) => {
     const { students } = req.body;
+    if (!students || !Array.isArray(students)) {
+        return res.status(400).json({ error: "Invalid data format: 'students' array required" });
+    }
+
     students.forEach(s => {
         s.id = "st" + Date.now() + Math.random().toString(36).substr(2, 5);
         if (!s.marks) s.marks = [];
