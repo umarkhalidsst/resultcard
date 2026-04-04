@@ -109,7 +109,7 @@ function renderStudentTable(students) {
     }
 
     students.forEach(s => {
-        const hasMarks = s.marks && Object.keys(s.marks).length > 0;
+        const hasMarks = s.marks && s.marks.length > 0;
         const statusBadge = hasMarks 
             ? '<span class="badge bg-success">Done</span>' 
             : '<span class="badge bg-warning text-dark">Pending</span>';
@@ -306,21 +306,36 @@ async function handlePrincipalBulkUpload() {
         workbook.SheetNames.forEach(sheetName => {
             const worksheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(worksheet);
+            
+            // Helper to find column value by fuzzy key matching
+            const getVal = (row, patterns) => {
+                const key = Object.keys(row).find(k => 
+                    patterns.some(p => k.toLowerCase().replace(/[^a-z0-9]/g, '').includes(p))
+                );
+                return key ? String(row[key]).trim() : '';
+            };
 
             const students = json.map(row => {
                 const student = {
-                    rollNo: String(row['Roll number'] || row['Roll No'] || row['Roll'] || ''),
-                    name: String(row['name'] || row['Name'] || row['Student Name'] || ''),
-                    fatherName: String(row["Father's Name"] || row['Father Name'] || row['Father'] || ''),
-                    studentClass: String(row['Class'] || sheetName || ''), 
+                    rollNo: getVal(row, ['rollnumber', 'rollno', 'roll']),
+                    name: getVal(row, ['name', 'studentname']),
+                    fatherName: getVal(row, ['fathername', 'fathersname', 'father']),
+                    studentClass: getVal(row, ['class']) || sheetName, 
                     school_id: LOGGED_IN_USER.school_id,
                     marks: []
                 };
 
                 // Identify subject marks (any column not used for identity)
-                const identityKeys = ['rollnumber', 'rollno', 'roll', 'name', 'studentname', 'fathername', 'fathersname', 'father', 'class'];
+                const identityKeys = ['rollnumber', 'rollno', 'roll', 'name', 'studentname', 'fathername', 'fathersname', 'father', 'class', 'section'];
                 Object.keys(row).forEach(key => {
-                    const normalizedKey = key.toLowerCase().replace(/\s+/g, '');
+                    const cleanKey = key.trim();
+                    const normalizedKey = cleanKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    
+                    // Skip if it's an identity column
+                    if (identityKeys.some(ik => normalizedKey.includes(ik))) {
+                        return;
+                    }
+
                     if (!identityKeys.includes(normalizedKey) && row[key] !== undefined) {
                         // Check for format: Subject Name (Total Marks) e.g. "Maths (75)"
                         let subjectName = key;
@@ -401,9 +416,7 @@ async function openMarksEntry(studentId) {
     document.getElementById('marks-section').classList.remove('d-none');
 
     // Fetch fresh data for this student
-    const res = await fetch(`${API_URL}/students`);
-    const students = await res.json();
-    CURRENT_STUDENT = students.find(s => s.id === studentId);
+    CURRENT_STUDENT = ALL_STUDENTS.find(s => s.id === studentId);
 
     if (!CURRENT_STUDENT) return;
 

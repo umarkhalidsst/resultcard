@@ -8,7 +8,6 @@ const app = new Hono();
 let SCHOOLS = [{ id: "s1", name: "GHS Chitti Sheikhan", logo: "" }];
 let USERS = [
     { id: "u1", name: "System Admin", phone: "03217193209", password: "Umar@8627", role: "Admin", approved: true },
-    { id: "u1", name: "System Admin", phone: "03217193209", password: "Umar@8627", role: "Admin", approved: true }, 
     { id: "u2", name: "Umar Khalid", phone: "03337193209", password: "123", role: "Principal", school_id: "s1", approved: true },
     { id: "u3", name: "Teacher Sarah", phone: "03111111111", password: "123", role: "Teacher", school_id: "s1", approved: true }
 ];
