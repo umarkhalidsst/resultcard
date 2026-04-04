@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="style.css">
     <!-- html2pdf.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- XLSX.js for Excel parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-light">
 
@@ -82,6 +84,38 @@
             <h2><i class="fas fa-university text-primary"></i> Principal Dashboard</h2>
             <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
         </div>
+        
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">School Profile</div>
+            <div class="card-body">
+                <div class="row align-items-end">
+                    <div class="col-md-9">
+                        <label class="form-label">Upload School Logo</label>
+                        <input type="file" id="p-school-logo-file" class="form-control" accept="image/*">
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-success w-100" onclick="saveSchoolSettings()">Update Profile</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4 border-info">
+            <div class="card-header bg-info text-white">Bulk Student Upload (Excel)</div>
+            <div class="card-body">
+                <div class="row align-items-end">
+                    <div class="col-md-9">
+                        <label class="form-label">Select Excel File (Worksheets = Class Names)</label>
+                        <input type="file" id="p-bulk-excel" class="form-control" accept=".xlsx, .xls">
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-info w-100 text-white" onclick="handlePrincipalBulkUpload()">Upload Students</button>
+                    </div>
+                </div>
+                <div class="mt-2"><small class="text-muted">Columns required: <b>Roll number</b>, <b>name</b>, <b>Father's Name</b>, <b>Class</b></small></div>
+            </div>
+        </div>
+
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">School Teachers</div>
             <div class="card-body">
@@ -150,7 +184,7 @@
                         <p class="card-text text-muted">Father: <span id="active-student-father"></span></p>
                         <hr>
                         <input type="hidden" id="active-student-id">
-                        <input type="text" id="schoolName" class="form-control mb-2" placeholder="School Name" value="FUTURE SCHOLARS HIGH SCHOOL">
+                        <input type="text" id="schoolName" class="form-control mb-2" placeholder="School Name" value="GHS Chitti Sheikhan">
                         <input type="text" id="studentClass" class="form-control mb-2" placeholder="Class" value="10th">
                         <input type="text" id="studentSection" class="form-control mb-2" placeholder="Section" value="A">
                         <input type="text" id="studentSession" class="form-control mb-2" placeholder="Session" value="2025-2026">
@@ -202,7 +236,10 @@
             <div id="result-card" class="result-card bg-white shadow-lg mx-auto">
                 <!-- Header -->
                 <div class="text-center border-bottom pb-3 mb-3 header-section">
-                    <div class="logo-box"><i class="fas fa-university"></i></div>
+                    <div class="logo-box">
+                        <img id="disp-logo-img" src="" class="d-none mb-2" style="max-height: 80px; width: auto;">
+                        <i id="disp-logo-icon" class="fas fa-university"></i>
+                    </div>
                     <h1 id="disp-school" class="fw-bold text-uppercase mb-0">School Name</h1>
                     <p class="mb-0 text-muted">Excellence in Education | est. 2020</p>
                     <div class="badge bg-dark text-white mt-2 px-3 py-1">ANNUAL RESULT CARD</div>

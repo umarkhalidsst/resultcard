@@ -11,6 +11,7 @@ const DEFAULT_SUBJECTS = [
 ];
 
 let LOGGED_IN_USER = null;
+let LOGGED_IN_SCHOOL = null;
 
 function toggleAuth(showSignup) {
     document.getElementById('login-card').classList.toggle('d-none', showSignup);
@@ -48,6 +49,12 @@ async function handleLogin() {
 
     if(data.success) {
         LOGGED_IN_USER = data.user;
+        // Sirf Principal aur Teacher ke liye school details fetch karein
+        if (LOGGED_IN_USER.school_id) {
+            const schoolRes = await fetch(`${API_URL}/school/${LOGGED_IN_USER.school_id}`);
+            LOGGED_IN_SCHOOL = await schoolRes.json();
+        }
+
         document.getElementById('login-section').classList.add('d-none');
         
         if (LOGGED_IN_USER.role === 'Admin') {
@@ -253,6 +260,110 @@ async function loadPrincipalData() {
     ).join('');
 }
 
+async function saveSchoolSettings() {
+    const fileInput = document.getElementById('p-school-logo-file');
+    const file = fileInput.files[0];
+    
+    let logoData = LOGGED_IN_SCHOOL.logo;
+
+    if (file) {
+        // Convert the local file to a Base64 string
+        logoData = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    const res = await fetch(`${API_URL}/school/${LOGGED_IN_USER.school_id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logo: logoData })
+    });
+
+    if ((await res.json()).success) {
+        LOGGED_IN_SCHOOL.logo = logoData;
+        alert("School Profile Updated!");
+    }
+}
+
+async function handlePrincipalBulkUpload() {
+    const fileInput = document.getElementById('p-bulk-excel');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert("Please select an Excel file first.");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        let allUploadedStudents = [];
+
+        workbook.SheetNames.forEach(sheetName => {
+            const worksheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet);
+
+            const students = json.map(row => {
+                const student = {
+                    rollNo: String(row['Roll number'] || row['Roll No'] || row['Roll'] || ''),
+                    name: String(row['name'] || row['Name'] || row['Student Name'] || ''),
+                    fatherName: String(row["Father's Name"] || row['Father Name'] || row['Father'] || ''),
+                    studentClass: String(row['Class'] || sheetName || ''), 
+                    school_id: LOGGED_IN_USER.school_id,
+                    marks: []
+                };
+
+                // Identify subject marks (any column not used for identity)
+                const identityKeys = ['rollnumber', 'rollno', 'roll', 'name', 'studentname', 'fathername', 'fathersname', 'father', 'class'];
+                Object.keys(row).forEach(key => {
+                    const normalizedKey = key.toLowerCase().replace(/\s+/g, '');
+                    if (!identityKeys.includes(normalizedKey) && row[key] !== undefined) {
+                        // Check for format: Subject Name (Total Marks) e.g. "Maths (75)"
+                        let subjectName = key;
+                        let totalMarks = 100; // Default
+
+                        const match = key.match(/(.+)\((.+)\)/);
+                        if (match) {
+                            subjectName = match[1].trim();
+                            totalMarks = parseFloat(match[2]) || 100;
+                        }
+
+                        student.marks.push({
+                            name: subjectName,
+                            total: totalMarks,
+                            obtained: row[key]
+                        });
+                    }
+                });
+                return student;
+            }).filter(s => s.rollNo && s.name);
+
+            allUploadedStudents = allUploadedStudents.concat(students);
+        });
+
+        if (allUploadedStudents.length === 0) {
+            alert("No valid student data found. Ensure columns match: Roll No, Name, Father Name.");
+            return;
+        }
+
+        const res = await fetch(`${API_URL}/upload-students`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ students: allUploadedStudents })
+        });
+
+        if ((await res.json()).success) {
+            alert(`Successfully uploaded ${allUploadedStudents.length} students across all classes.`);
+            fileInput.value = '';
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
 function showAddTeacherModal() {
     const modal = new bootstrap.Modal(document.getElementById('addTeacherModal'));
     modal.show();
@@ -383,6 +494,19 @@ function generateResult() {
 
     // 2. Populate Info Grid
     document.getElementById('disp-school').textContent = school;
+    
+    // Handle Logo rendering
+    const logoImg = document.getElementById('disp-logo-img');
+    const logoIcon = document.getElementById('disp-logo-icon');
+    if (LOGGED_IN_SCHOOL && LOGGED_IN_SCHOOL.logo) {
+        logoImg.src = LOGGED_IN_SCHOOL.logo;
+        logoImg.classList.remove('d-none');
+        logoIcon.classList.add('d-none');
+    } else {
+        logoImg.classList.add('d-none');
+        logoIcon.classList.remove('d-none');
+    }
+
     document.getElementById('disp-name').textContent = name;
     document.getElementById('disp-father').textContent = father;
     document.getElementById('disp-roll').textContent = roll;

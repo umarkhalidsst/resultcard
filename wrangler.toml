@@ -1,7 +1,10 @@
-name = "school-result-card"
+name = "school-result-system"
 main = "worker.js"
-compatibility_date = "2024-03-25"
+compatibility_date = "2024-04-03"
 
-[assets]
-directory = "./public"
-binding = "ASSETS"
+[site]
+bucket = "./public"
+
+[vars]
+ADMIN_PHONE = "03217193209"
+ADMIN_PASSWORD = "Umar@8627"
